@@ -2,10 +2,7 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { Resend } from 'resend';
 import { saveBooking, getBookings } from '@/lib/storage';
-import * as dotenv from 'dotenv';
-import path from 'path';
 
-dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 export async function POST(request: Request) {
   const resend = new Resend(process.env.RESEND_API_KEY);
@@ -75,7 +72,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, id: savedId }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed' }, { status: 500 });
+    console.error('SERVER ERROR DURING BOOKING:', error);
+    return NextResponse.json({ 
+      error: 'Failed', 
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 500 });
   }
 }
 
