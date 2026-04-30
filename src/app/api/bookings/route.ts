@@ -27,6 +27,7 @@ export async function POST(request: Request) {
     const calendarUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=Appointment+at+Aarogya+Heart&details=Appointment+with+Dr.+Ananya+Sharma&location=Medical+Plaza,+Sector+15,+Gurgaon&dates=${startTime.toISOString().replace(/[-:]/g, '').split('.')[0]}Z%2F${endTime.toISOString().replace(/[-:]/g, '').split('.')[0]}Z`;
 
     if (process.env.RESEND_API_KEY) {
+      // 1. Try sending to Patient
       try {
         await resend.emails.send({
           from: 'Aarogya Heart <onboarding@resend.dev>',
@@ -45,7 +46,12 @@ export async function POST(request: Request) {
             </div>
           `
         });
+      } catch (e) {
+        console.log('Patient email failed (likely sandbox restriction)');
+      }
 
+      // 2. Try sending to Doctor (Always your email)
+      try {
         await resend.emails.send({
           from: 'Clinic Alert <onboarding@resend.dev>',
           to: ['m.scrajnish@gmail.com'], 
@@ -62,7 +68,9 @@ export async function POST(request: Request) {
             </div>
           `
         });
-      } catch (e) {}
+      } catch (e) {
+        console.log('Doctor email failed');
+      }
     }
 
     return NextResponse.json({ success: true, id: savedId }, { status: 201 });
